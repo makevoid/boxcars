@@ -35,6 +35,10 @@ module Boxcars
       lines.map { |ln| "#{ln[0]}: #{ln[1]}" }.join("\n")
     end
 
+    def to_s_debug
+      lines.map { |ln| "\n#{ln[0]}:\n#{"-"*10}\n#{ln[1]}" }.join("\n")
+    end
+
     # add assistant text to the conversation at the end
     # @param text [String] The text to add
     def add_assistant(text)

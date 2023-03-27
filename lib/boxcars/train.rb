@@ -21,7 +21,7 @@ module Boxcars
       @early_stopping_method = kwargs.delete(:early_stopping_method) || "force"
       kwargs[:stop] ||= ["\n#{observation_prefix}"]
 
-      super(prompt: prompt, engine: engine, **kwargs)
+      super prompt: prompt, engine: engine, **kwargs
     end
 
     # Extract the boxcar name and input from the text.
@@ -50,16 +50,24 @@ module Boxcars
       parsed_output = nil
       loop do
         full_inputs[:agent_scratchpad] += full_output
-        output = predict(**full_inputs)
+        output = predict **full_inputs
         full_output += output
-        parsed_output = extract_boxcar_and_input(full_output)
+        parsed_output = extract_boxcar_and_input full_output
         break unless parsed_output.nil?
       end
-      if parsed_output.is_a?(Result)
-        TrainAction.from_result(boxcar: "Final Answer", result: parsed_output, log: full_output)
+      if parsed_output.is_a? Result
+        TrainAction.from_result(
+          boxcar: "Final Answer",
+          result: parsed_output,
+          log:    full_output,
+        )
       # elsif parsed_output[0] == "Error"
       else
-        TrainAction.new(boxcar: parsed_output[0], boxcar_input: parsed_output[1], log: full_output)
+        TrainAction.new(
+          boxcar:       parsed_output[0],
+          boxcar_input: parsed_output[1],
+          log:          full_output
+        )
       end
     end
 
@@ -68,9 +76,10 @@ module Boxcars
     # @param kwargs [Hash] User inputs.
     # @return [Boxcars::Action] Action specifying what boxcar to use.
     def plan(intermediate_steps, **kwargs)
-      thoughts = construct_scratchpad(intermediate_steps)
+      thoughts = construct_scratchpad intermediate_steps
       full_inputs = prediction_additional.merge(kwargs).merge(agent_scratchpad: thoughts)
       action = get_next_action(full_inputs)
+
       return TrainFinish.new({ output: action.boxcar_input }, log: action.log) if action.boxcar == finish_boxcar_name
 
       action
@@ -165,7 +174,7 @@ module Boxcars
         new_inputs = { agent_scratchpad: thoughts, stop: _stop }
         full_inputs = kwargs.merge(new_inputs)
         full_output = predict(**full_inputs)
-        parsed_output = extract_boxcar_and_input(full_output)
+        parsed_output = extract_boxcar_and_input full_output
         if parsed_output.nil?
           TrainFinish({ output: full_output }, full_output)
         else
@@ -197,7 +206,8 @@ module Boxcars
             observation = boxcar.run(output.boxcar_input)
             return_direct = boxcar.return_direct
           rescue StandardError => e
-            Boxcars.error "Error in #{boxcar.name} boxcar#call: #{e}", :red
+            Boxcars.error "Error in #{boxcar.name} boxcar#call: #{e.class} - #{e.message}\n#{e.backtrace.join "\n"}\n", :red
+
             observation = "Error - #{e}, correct and try again."
           end
         elsif output.boxcar == :error

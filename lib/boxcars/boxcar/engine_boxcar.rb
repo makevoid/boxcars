@@ -85,13 +85,13 @@ module Boxcars
       # if we get errors back, try predicting again giving the errors with the inputs
       conversation = nil
       answer = nil
-      4.times do
+      3.times do
         text = predict(current_conversation: conversation, **prediction_variables(inputs)).strip
         answer = get_answer(text)
         if answer.status == :error
           Boxcars.debug "have error, trying again: #{answer.answer}", :red
           conversation ||= Conversation.new
-          conversation.add_assistant(text)
+          conversation.add_assistant(text) unless text.empty?
           conversation.add_user(answer.answer)
         else
           Boxcars.debug answer.to_json, :magenta
