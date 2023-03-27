@@ -5,7 +5,7 @@ require_relative "lib/boxcars/version"
 Gem::Specification.new do |spec|
   spec.name = "boxcars"
   spec.version = Boxcars::VERSION
-  spec.authors = ["Francis Sullivan", "Tabrez Syed"]
+  spec.authors = ["Francis Sullivan", "Tabrez Syed", "Francesco Canessa - @makevoid"]
   spec.email = ["hi@boxcars.ai"]
 
   spec.summary = "Boxcars is a gem that enables you to create new systems with AI composability. Inspired by python langchain."
